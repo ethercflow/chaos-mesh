@@ -139,3 +139,10 @@ preJobs:
 
 postJobs:
   podAnnotations: {}
+
+bpfki:
+  image: pingcap/chaos-kernel:latest
+  imagePullPolicy: Always
+  grpcPort: 50051
+
+  podAnnotations: {}
