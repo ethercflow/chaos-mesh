@@ -72,7 +72,33 @@ Description:
 
 * **mode** defines the mode to select pods.
 * **selector** specifies the target pods for chaos injection.
-* **failkernRequest** defines the specified injection mode (kmalloc,bio,etc) with a call chain and an optional set of predicates.
+* **failkernRequest** defines the specified injection mode (kmalloc,bio,etc)
+  with a call chain and an optional set of predicates. The fields are:
+  * **failtype** indicates what to fail, can be set to `0` / `1` / `2`.
+    - If `0`, indicates slab to fail (should_failslab)
+    - If `1`, indicates alloc_page to fail (should_fail_alloc_page)
+    - If `2`, indicates bio to fail (should_fail_bio)
+
+    You can read:
+    1. [fault-injection](https://www.kernel.org/doc/html/latest/fault-injection/fault-injection.html)
+    2. [inject_example](http://github.com/iovisor/bcc/blob/master/tools/inject_example.txt)
+
+    to learn more.
+  * **callchain** indicates a special call chain, such as:
+       ```c
+     ext4_mount 
+       -> mount_subtree
+          -> ...
+            -> should_failslab
+       ```
+      With an optional set of predicates and an optional set of parameters,
+      which used with predicates. You can read call chan and predicate
+      examples from https://github.com/chaos-mesh/bpfki/tree/develop/examples
+      to learn more. If no special call chain, just keep callchain empty,
+      which means it will fail at any call chain with slab alloc (eg: kmalloc).'
+  * **headers** indicates the appropriate kernel headers you need. Eg: "linux/mmzone.h", "linux/blkdev.h" and so on
+  * **probability** indicates the fails with probability. If you want 1%, please set this field with 1.
+  * **times** indicates the max times of fails
 * **duration** defines the duration for each chaos experiment. In the sample file above, the time chaos lasts for 10 seconds.
 * **scheduler** defines the scheduler rules for the running time of the chaos experiment. For more rule information, see <https://godoc.org/github.com/robfig/cron>.
 
@@ -83,4 +109,4 @@ Description:
   physical page allocation will fail, and if the behavior is continuous in a 
   very short time (eg: ``while (1) {memset(malloc(1M), '1', 1M)}`), the system's
   oom-killer will be awakened to release memory. So the container\_id will lose
-  limit to oom-killer. In this case, you may try it with `probability` and `times`.
+  limit to oom-killer.
